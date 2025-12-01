@@ -22,6 +22,13 @@ def solve_cube_bfs(cube):
 
         for color in cur_cube.color_map:
             for n in range(1, 4):
+
+                if len(moves_so_far) > 0:
+                    if (color, n) == moves_so_far[-1]:
+                        continue
+                    elif (color, 4-n) == moves_so_far[-1]:
+                        continue
+
                 new_cube = copy.deepcopy(cur_cube)
                 new_cube.turn(color, n)
 
