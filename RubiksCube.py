@@ -209,3 +209,8 @@ class RubiksCube:
 
         for color, n in moves:
             self.turn(color, n)
+
+    def __lt__(self, other):
+        if not isinstance(other, RubiksCube):
+            return NotImplemented
+        return True
