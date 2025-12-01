@@ -1,21 +1,47 @@
-from RubiksCube import *
-from solutions.bfs import solve_cube_bfs
-from solutions.astar import solve_cube_astar
-import copy
-import time
+from __future__ import annotations
 
-cube = RubiksCube()
+from typing import Callable, Dict, List
 
-cube.scramble(4)
+from rubiks import RubiksCube
+from rubiks.cube import Move
+from rubiks.heuristics import DEFAULT_HEURISTIC, Heuristic
+from rubiks.solvers import SolveResult, solve_cube_astar, solve_cube_bfs
 
-cube.print_cube()
+SolverFn = Callable[..., SolveResult]
 
-start_time = time.time()
+SOLVER_REGISTRY: Dict[str, SolverFn] = {
+    "astar": solve_cube_astar,
+    "bfs": solve_cube_bfs,
+}
 
-result, moves = solve_cube_astar(cube)
 
-print(result, moves)
+def run(
+    method: str = "astar",
+    *,
+    scramble_moves: int = 4,
+    heuristic: Heuristic = DEFAULT_HEURISTIC,
+    max_depth: int = 100,
+) -> tuple[SolveResult, List[Move]]:
+    cube = RubiksCube()
+    scramble_sequence = cube.scramble(scramble_moves)
 
-end_time = time.time()
+    solver = SOLVER_REGISTRY.get(method)
+    if solver is None:
+        raise ValueError(f"Unknown solver '{method}'. Available: {sorted(SOLVER_REGISTRY)}")
 
-print(f"Time taken: {end_time - start_time} seconds")
+    kwargs = {"max_depth": max_depth}
+    if method == "astar":
+        kwargs["heuristic"] = heuristic
+
+    result = solver(cube, **kwargs)
+    return result, scramble_sequence
+
+
+if __name__ == "__main__":
+    solve_result, scramble_sequence = run()
+
+    print(f"Scramble ({len(scramble_sequence)} moves): {scramble_sequence}")
+    print(f"Solved: {solve_result.success}")
+    print(f"Moves found ({len(solve_result.moves)}): {solve_result.moves}")
+    print(f"States explored: {solve_result.explored}")
+    print(f"Duration: {solve_result.duration:.4f}s")

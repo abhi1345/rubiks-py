@@ -1,78 +1,47 @@
+from __future__ import annotations
+
 import random
+from typing import Iterable, List, Sequence, Tuple
 
-def rotate_matrix(l):
-    return [list(row) for row in zip(*l[::-1])]
 
-solved_state = [
-            [[0,0,0], # green on top
-             [0,0,0],
-             [0,0,0]
-            ],
-            [[1,1,1], # green on top
-             [1,1,1],
-             [1,1,1]
-            ],
-            [[2,2,2], # white on top
-             [2,2,2],
-             [2,2,2]
-            ],
-            [[3,3,3], # white on top
-             [3,3,3],
-             [3,3,3]
-            ],
-            [[4,4,4], # white on top
-             [4,4,4],
-             [4,4,4]
-            ],
-            [[5,5,5], # white on top
-             [5,5,5],
-             [5,5,5]
-            ]
-        ]
+Face = List[List[int]]
+Move = Tuple[str, int]
+
+
+def rotate_matrix(matrix: Face) -> Face:
+    return [list(row) for row in zip(*matrix[::-1])]
+
+
+SOLVED_STATE: List[Face] = [
+    [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
+    [[1, 1, 1], [1, 1, 1], [1, 1, 1]],
+    [[2, 2, 2], [2, 2, 2], [2, 2, 2]],
+    [[3, 3, 3], [3, 3, 3], [3, 3, 3]],
+    [[4, 4, 4], [4, 4, 4], [4, 4, 4]],
+    [[5, 5, 5], [5, 5, 5], [5, 5, 5]],
+]
+
+
+def _copy_state(state: Sequence[Face]) -> List[Face]:
+    return [ [row[:] for row in face] for face in state ]
+
 
 class RubiksCube:
 
-    def __init__(self):
+    def __init__(self, state: Sequence[Face] | None = None):
         self.color_map = ["white", "yellow", "red", "orange", "blue", "green"]
-
-        self.state = [
-            [[0,0,0], # green on top
-             [0,0,0],
-             [0,0,0]
-            ],
-            [[1,1,1], # green on top
-             [1,1,1],
-             [1,1,1]
-            ],
-            [[2,2,2], # white on top
-             [2,2,2],
-             [2,2,2]
-            ],
-            [[3,3,3], # white on top
-             [3,3,3],
-             [3,3,3]
-            ],
-            [[4,4,4], # white on top
-             [4,4,4],
-             [4,4,4]
-            ],
-            [[5,5,5], # white on top
-             [5,5,5],
-             [5,5,5]
-            ]
-        ]
-
+        self.state: List[Face] = _copy_state(state or SOLVED_STATE)
         self.turns = {
-            "white" : self.turn_white_side
-            , "yellow" : self.turn_yellow_side
-            , "red" : self.turn_red_side
-            , "orange" : self.turn_orange_side
-            , "blue" : self.turn_blue_side
-            , "green" : self.turn_green_side
+            "white": self.turn_white_side,
+            "yellow": self.turn_yellow_side,
+            "red": self.turn_red_side,
+            "orange": self.turn_orange_side,
+            "blue": self.turn_blue_side,
+            "green": self.turn_green_side,
         }
 
     def state_tuple(self):
-        return tuple([tuple([tuple(row) for row in side]) for side in self.state])
+        return tuple(tuple(tuple(row) for row in side) for side in self.state)
 
     def print_cube(self):
         for i in range(len(self.color_map)):
@@ -183,32 +152,23 @@ class RubiksCube:
                              row_to_insert)
             
     def is_solved(self):
-        return self.state == solved_state
+        return self.state == SOLVED_STATE
 
-    def scramble(self, n=25):
-        moves = []
+    def clone(self) -> "RubiksCube":
+        return RubiksCube(state=_copy_state(self.state))
 
-        for i in range(n):
-            color = random.choice(self.color_map)
-            n = random.randint(1, 3)
-            moves.append((color, n))
-
-        print("Scramble moves:")
-        for move in moves:
-            if move[1] == 1:
-                formatted_move_string = ""
-            elif move[1] == 2:
-                formatted_move_string = "2"
-            elif move[1] == 3:
-                formatted_move_string = "prime"
-            else:
-                raise ValueError
-
-            formatted_move_string = f"{move[0]} {formatted_move_string}"
-            print(formatted_move_string)
-
+    def apply_moves(self, moves: Iterable[Move]) -> None:
         for color, n in moves:
             self.turn(color, n)
+
+    def scramble(self, steps: int = 25) -> list[Move]:
+        moves: list[Move] = []
+        for _ in range(steps):
+            color = random.choice(self.color_map)
+            rotations = random.randint(1, 3)
+            moves.append((color, rotations))
+        self.apply_moves(moves)
+        return moves
 
     def __lt__(self, other):
         if not isinstance(other, RubiksCube):
