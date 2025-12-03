@@ -3,6 +3,7 @@
 import math
 from typing import Protocol
 
+from rubiks.constants import colors, opposite_color_map
 from rubiks.cube import RubiksCube
 
 
@@ -46,8 +47,29 @@ def compute_entropy(cube: RubiksCube) -> float:
 def combined_entropy_misplaced(cube: RubiksCube) -> float:
     return compute_number_of_misplaced_tiles(cube) + compute_entropy(cube)
 
+def pieces_distance_to_side(cube: RubiksCube):
+    total_heuristic = 0
 
-DEFAULT_HEURISTIC: Heuristic = combined_entropy_misplaced
+    for i, side in enumerate(cube.state):
+
+        current_side = colors[i]
+
+        for row in side:
+            for piece in row:
+                total_heuristic += piece_distance_to_side(piece, current_side)
+
+    return total_heuristic
+
+def piece_distance_to_side(piece_color, current_side):
+    if piece_color == current_side:
+        return 0
+    elif current_side == opposite_color_map[piece_color]:
+        return 2
+    else:
+        return 1
+
+
+DEFAULT_HEURISTIC: Heuristic = pieces_distance_to_side
 
 __all__ = [
     "Heuristic",
@@ -55,4 +77,5 @@ __all__ = [
     "compute_number_of_misplaced_tiles",
     "compute_entropy",
     "combined_entropy_misplaced",
+    "pieces_distance_to_side",
 ]
