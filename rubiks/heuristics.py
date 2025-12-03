@@ -56,7 +56,8 @@ def pieces_distance_to_side(cube: RubiksCube):
 
         for row in side:
             for piece in row:
-                total_heuristic += piece_distance_to_side(piece, current_side)
+                piece_color = colors[piece]
+                total_heuristic += piece_distance_to_side(piece_color, current_side)
 
     return total_heuristic
 
